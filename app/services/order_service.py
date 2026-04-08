@@ -236,6 +236,7 @@ class OrderService:
         
         order.status = OrderStatus.CANCELLED
         db.commit()
+        db.refresh(order)  # Refresh to get updated data
         
         # Send cancellation email
         background_tasks.add_task(
@@ -243,7 +244,24 @@ class OrderService:
             db, order_id
         )
         
-        return order
+        # Return the updated order with items
+        return {
+            "id": order.id,
+            "user_id": order.user_id,
+            "total_amount": order.total_amount,
+            "status": order.status.value,
+            "created_at": order.created_at,
+            "updated_at": order.updated_at,
+            "items": [
+                {
+                    "id": item.id,
+                    "product_id": item.product_id,
+                    "quantity": item.quantity,
+                    "price": item.price
+                }
+                for item in order.items
+            ]
+        }
     
     @staticmethod
     def get_order_statistics(db: Session, user_id: Optional[int] = None):

@@ -160,7 +160,7 @@ def update_order_status(
     """Update order status (Admin only)"""
     return OrderService.update_order_status(db, order_id, status_update, background_tasks)
 
-@router.post("/{order_id}/cancel")
+@router.post("/{order_id}/cancel", response_model=dict)
 def cancel_order(
     order_id: int,
     background_tasks: BackgroundTasks,
@@ -168,4 +168,8 @@ def cancel_order(
     current_user: User = Depends(get_current_user)
 ):
     """Cancel an order (Customer only for their own orders)"""
-    return OrderService.cancel_order(db, order_id, current_user.id, background_tasks)
+    result = OrderService.cancel_order(db, order_id, current_user.id, background_tasks)
+    return {
+        "message": "Order cancelled successfully",
+        "order": result
+    }
